@@ -1,0 +1,97 @@
+# File: public/.htaccess
+# Apache configuration for the PASHA Benefits Portal
+
+# Enable the rewrite engine
+RewriteEngine On
+
+# Set the base directory for the rewrite rules
+# RewriteBase /
+
+# Redirect to HTTPS if not already using it (uncomment in production)
+# RewriteCond %{HTTPS} !=on
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# If the requested file or directory exists, don't rewrite
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Rewrite all other requests to index.php
+RewriteRule ^ index.php [L]
+
+# Prevent direct access to files not meant to be accessed directly
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Prevent direct access to sensitive directories
+<IfModule mod_rewrite.c>
+    RewriteRule ^app/.* index.php [L]
+    RewriteRule ^config/.* index.php [L]
+    RewriteRule ^data/.* index.php [L]
+    RewriteRule ^vendor/.* index.php [L]
+</IfModule>
+
+# Set default character set
+AddDefaultCharset UTF-8
+
+# Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json
+</IfModule>
+
+# Set security headers
+<IfModule mod_headers.c>
+    # Disable MIME type sniffing
+    Header set X-Content-Type-Options "nosniff"
+    
+    # Enable XSS protection
+    Header set X-XSS-Protection "1; mode=block"
+    
+    # Prevent clickjacking
+    Header set X-Frame-Options "SAMEORIGIN"
+    
+    # Apply content security policy (adjust as needed)
+    # Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+    
+    # Enable HSTS (uncomment in production)
+    # Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+# Cache control
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Set default expiry
+    ExpiresDefault "access plus 1 month"
+    
+    # HTML documents
+    ExpiresByType text/html "access plus 0 seconds"
+    
+    # CSS
+    ExpiresByType text/css "access plus 1 year"
+    
+    # JavaScript
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+    
+    # Images
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    
+    # Fonts
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    ExpiresByType application/x-font-ttf "access plus 1 year"
+    ExpiresByType font/opentype "access plus 1 year"
+</IfModule>
+
+# PHP settings
+php_value upload_max_filesize 5M
+php_value post_max_size 8M
+php_value memory_limit 256M
+php_value max_execution_time 300
+php_flag display_errors off
+php_flag log_errors on

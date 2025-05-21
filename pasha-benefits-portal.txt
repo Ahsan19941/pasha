@@ -1,0 +1,134 @@
+# PASHA Benefits Portal - LAMP Implementation
+
+## Project Structure
+```
+pasha-benefits/
+├── config/              # Configuration files
+│   ├── config.php       # Main configuration file
+│   └── database.php     # Database connection settings
+├── public/              # Publicly accessible files
+│   ├── index.php        # Main entry point
+│   ├── assets/          # CSS, JS, images
+│   └── .htaccess        # Apache configuration
+├── app/                 # Application code
+│   ├── controllers/     # Controller classes
+│   ├── models/          # Database models
+│   ├── views/           # Templates and UI
+│   ├── middleware/      # Authentication middleware
+│   └── helpers/         # Utility functions
+├── data/                # Data storage (logs, cache)
+│   ├── logs/            # Application logs
+│   └── cache/           # Cached data
+├── vendor/              # Third-party libraries (via Composer)
+└── scripts/             # Deployment and maintenance scripts
+```
+
+## Database Schema
+
+### Members Table
+```sql
+CREATE TABLE members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    company_name VARCHAR(255) NOT NULL,
+    membership_id VARCHAR(100) NOT NULL UNIQUE,
+    contact_person VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    address TEXT,
+    membership_status ENUM('active', 'inactive', 'pending') DEFAULT 'active',
+    joining_date DATE NOT NULL,
+    expiry_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+### Users Table
+```sql
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    role ENUM('admin', 'staff', 'partner') NOT NULL,
+    partner_id INT NULL,
+    last_login DATETIME NULL,
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE SET NULL
+);
+```
+
+### Partners Table
+```sql
+CREATE TABLE partners (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    contact_person VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    address TEXT,
+    logo_url VARCHAR(255),
+    website VARCHAR(255),
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+```
+
+### Offers Table
+```sql
+CREATE TABLE offers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    partner_id INT NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    discount_value VARCHAR(100),
+    redemption_instructions TEXT,
+    start_date DATE NOT NULL,
+    end_date DATE,
+    image_url VARCHAR(255),
+    status ENUM('active', 'inactive', 'draft') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (partner_id) REFERENCES partners(id) ON DELETE CASCADE
+);
+```
+
+### Verifications Table
+```sql
+CREATE TABLE verifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    member_id INT,
+    verified_by INT,
+    verification_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verification_method ENUM('id', 'company_name') NOT NULL,
+    verification_input VARCHAR(255) NOT NULL,
+    verification_result ENUM('success', 'failed') NOT NULL,
+    ip_address VARCHAR(45),
+    FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE SET NULL,
+    FOREIGN KEY (verified_by) REFERENCES users(id) ON DELETE SET NULL
+);
+```
+
+### Activity Logs Table
+```sql
+CREATE TABLE activity_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    action VARCHAR(255) NOT NULL,
+    entity_type VARCHAR(100),
+    entity_id INT,
+    details TEXT,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+```
+
+## Core Implementation
+
+The implementation will follow the MVC (Model-View-Controller) pattern to ensure clean separation of concerns and maintainable code structure.
